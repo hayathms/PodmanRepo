@@ -4,23 +4,28 @@ LABEL version="1.0"
 LABEL description="The Rust In Its Full Glory"
 
 ARG USERNAME
+ARG UID
 
-# Update and install dependencies
-RUN zypper update -y || (echo "Retrying..."; sleep 5; zypper update -y)
-RUN zypper install -y openssl-devel
+RUN zypper update -y && zypper install -y openssl-devel
 RUN zypper install -y --type pattern devel_basis
 
-# Create a user
-RUN useradd -m -s /bin/bash $USERNAME || exit 0
+RUN useradd -ms /bin/bash $USERNAME -u $UID; exit 0
+RUN usermod -a -G sudo $USERNAME; exit 0
+RUN usermod -a -G users $USERNAME; exit 0
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 USER $USERNAME
 ENV USER=$USERNAME
-WORKDIR /home/$USERNAME
 
-# Install rustup and add Rust to PATH in a single RUN step
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+ENV PATH=$PATH:/home/$USERNAME/.local/bin/:/home/$USERNAME/.cargo/bin/
 
-RUN . "$HOME/.cargo/env" && \
-    rustup target add wasm32-unknown-unknown && \
-    cargo install trunk && \
-    cargo install wasm-bindgen-cli && \
-    cargo install cargo-make
+# Below is optional
+#########################################
+#########################################
+# for wasm-pack
+RUN rustup target add wasm32-unknown-unknown
+RUN rustup update && cargo install trunk
+RUN cargo install wasm-bindgen-cli
+RUN cargo install cargo-make
+#########################################
+#########################################
