@@ -7,26 +7,26 @@ ARG USERNAME
 ARG UID
 ARG PROJECT_PWD
 
-# Below one line is temporary until update issue is solved.
+# Update and install dependencies
 RUN zypper update -y || (echo "Retrying..."; sleep 5; zypper update -y)
 RUN zypper install -y openssl-devel
 RUN zypper install -y --type pattern devel_basis
 
-RUN useradd -m -s /bin/bash $USERNAME -u $UID; exit 0
+# Create a user
+RUN useradd -m -s /bin/bash $USERNAME -u $UID || exit 0
 USER $USERNAME
 ENV USER=$USERNAME
+WORKDIR /home/$USERNAME
 
+# Install rustup and add Rust to PATH
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH=$PATH:/home/$USERNAME/.local/bin/:/home/$USERNAME/.cargo/bin/
+ENV PATH="/home/$USERNAME/.cargo/bin:$PATH"
 
-WORKDIR "$PROJECT_PWD"
-# Below is optional
-#########################################
-#########################################
-# for wasm-pack
+# Add wasm target and install tools
 RUN rustup target add wasm32-unknown-unknown
-RUN rustup update && cargo install trunk
+RUN cargo install trunk
 RUN cargo install wasm-bindgen-cli
 RUN cargo install cargo-make
-#########################################
-#########################################
+
+# Set project working directory
+WORKDIR "$PROJECT_PWD"
