@@ -3,7 +3,7 @@ LABEL maintainer="Hayath"
 LABEL version="1.0"
 LABEL description="The Rust In Its Full Glory"
 
-ARG USERNAME=rustuser
+ARG USERNAME
 
 # Update and install dependencies
 RUN zypper update -y || (echo "Retrying..."; sleep 5; zypper update -y)
@@ -16,14 +16,9 @@ USER $USERNAME
 ENV USER=$USERNAME
 WORKDIR /home/$USERNAME
 
-# Install rustup and add Rust to PATH
+# Install rustup and add Rust to PATH in a single RUN step
 RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-ENV PATH="/home/$USERNAME/.cargo/bin:$PATH"
 
-# Add Rust environment setup to bashrc
-RUN echo '. "$HOME/.cargo/env"' >> /home/$USERNAME/.bashrc
-
-# Install additional Rust tools
 RUN . "$HOME/.cargo/env" && \
     rustup target add wasm32-unknown-unknown && \
     cargo install trunk && \
