@@ -3,9 +3,9 @@ LABEL maintainer="Hayath"
 LABEL version="1.0"
 LABEL description="The Rust In Its Full Glory"
 
-ARG USERNAME
-ARG UID
-ARG PROJECT_PWD
+# ARG USERNAME
+# ARG UID
+# ARG PROJECT_PWD
 
 # Update and install dependencies
 RUN zypper update -y || (echo "Retrying..."; sleep 5; zypper update -y)
@@ -13,18 +13,17 @@ RUN zypper install -y openssl-devel
 RUN zypper install -y --type pattern devel_basis
 
 # Create a user
-RUN useradd -m -s /bin/bash $USERNAME -u $UID || exit 0
-USER $USERNAME
-ENV USER=$USERNAME
-WORKDIR /home/$USERNAME
+# RUN useradd -m -s /bin/bash $USERNAME -u $UID || exit 0
+# USER $USERNAME
+# ENV USER=$USERNAME
+# WORKDIR /home/$USERNAME
 
 # Install rustup and add Rust to PATH in a single RUN step
-RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y && \
-    . "$HOME/.cargo/env" && \
-    rustup target add wasm32-unknown-unknown && \
+RUN curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+RUN rustup target add wasm32-unknown-unknown && \
     cargo install trunk && \
     cargo install wasm-bindgen-cli && \
     cargo install cargo-make
 
 # Set project working directory
-WORKDIR "$PROJECT_PWD"
+# WORKDIR "$PROJECT_PWD"
